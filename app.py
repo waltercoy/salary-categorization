@@ -4,6 +4,9 @@ import joblib
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
+# --- MUST BE FIRST: Page Configuration ---
+st.set_page_config(page_title="Salary Predictor", page_icon="💰", layout="wide")
+
 # --- 0. Custom Class Definition (WAJIB ADA) ---
 # Harus sama persis dengan yang di Notebook saat training
 class TargetEncoder(BaseEstimator, TransformerMixin):
@@ -44,7 +47,6 @@ def load_assets():
 model, encoder, config = load_assets()
 
 # --- 2. Title & Description ---
-st.set_page_config(page_title="Salary Predictor", page_icon="💰")
 st.title("💰 AI Data Science Salary Predictor")
 st.markdown("""
 This advanced app uses **HistGradientBoosting** to predict the **exact salary value** 
