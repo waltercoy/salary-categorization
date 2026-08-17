@@ -65,10 +65,29 @@ def load_model_assets():
         model = joblib.load('best_model.pkl')
         encoder = joblib.load('encoder.pkl')
         config = joblib.load('config.pkl')
+        # Validate model execution with dummy sample
+        dummy_df = pd.DataFrame([{
+            'Designation': 'Data Scientist', 'Experience': 'MI', 'Employment_Status': 'FT',
+            'Company_Size': 'M', 'Remote_Working_Ratio': 50, 'Company_Location': 'US',
+            'Employee_Location': 'US', 'Working_Year': 2022
+        }])
+        dummy_fe = advanced_feature_engineering(dummy_df)
+        dummy_ready = dummy_fe[config.get('feature_cols', dummy_fe.columns.tolist())]
+        dummy_enc = encoder.transform(dummy_ready)
+        _ = model.predict(dummy_enc)
         return model, encoder, config
     except Exception as e:
-        st.error(f"Error loading model artifacts: {e}")
-        return None, None, None
+        # Auto-train on-the-fly if pickle version mismatch or missing artifacts on cloud
+        try:
+            from train import train_and_evaluate
+            train_and_evaluate()
+            model = joblib.load('best_model.pkl')
+            encoder = joblib.load('encoder.pkl')
+            config = joblib.load('config.pkl')
+            return model, encoder, config
+        except Exception as train_err:
+            st.error(f"Error initializing model: {train_err}")
+            return None, None, None
 
 @st.cache_data
 def load_dataset():
