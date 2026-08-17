@@ -1,77 +1,93 @@
-# Data Science Salary Categorization
+# Data Science Salary Categorization & Intelligence
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 ![Scikit-Learn](https://img.shields.io/badge/Library-Scikit--Learn-orange)
-![Status](https://img.shields.io/badge/Status-Completed-green)
+![Streamlit](https://img.shields.io/badge/App-Streamlit-red)
+![Status](https://img.shields.io/badge/Status-Optimized-brightgreen)
 
 ## 📌 Project Overview
-This project aims to build a Machine Learning model capable of predicting the salary category of Data Science professionals. The study transforms a regression problem (predicting exact salary values) into a **Multi-class Classification** problem by categorizing salaries into three distinct tiers: **Low**, **Medium**, and **High**.
+This project builds an end-to-end Machine Learning pipeline and interactive web dashboard to predict and categorize the compensation of Data Science professionals globally into three tiers: **Low**, **Medium**, and **High**.
 
-By analyzing this data, the model helps identify key factors—such as experience level, job designation, and company size—that significantly influence compensation in the data science field.
+By leveraging **Log-Target Regressor modeling** (`HistGradientBoostingRegressor`) with **Smoothed Target Encoding** and ordinal feature engineering, the model achieves high accuracy and delivers interpretable compensation insights.
 
-## Dataset Information
+---
 
-### 1. Dataset Background
-The dataset used in this study is titled **"Data Science Fields Salary Categorization,"** obtained from **Kaggle** (contributed by user *whenamancodes*).
-* **Volume:** 607 records with 9 meaningful attributes (after index removal).
-* **Suitability:** The dataset consists of structured data representing job-related information, making it manageable and ideal for supervised learning classification tasks.
+## 📊 Dataset Information
 
-### 2. Features
-The dataset captures employment conditions and professional profiles, including:
-* **Job Profile:** `Designation` (Job Title), `Experience` (Seniority Level).
-* **Compensation:** `Salary_In_Rupees` (Annual Salary converted to Indian Rupees).
-* **Work Environment:** `Remote_Working_Ratio` (Remote work percentage), `Company_Size` (Small/Medium/Large).
-* **Location:** `Employee_Location` and `Company_Location`.
-* **Timeline:** `Working_Year` (Year of salary report).
+* **Source:** [Kaggle - Data Science Fields Salary Categorization](https://www.kaggle.com/datasets/whenamancodes/data-science-fields-salary-categorization)
+* **Volume:** 607 records with 10 features.
+* **Key Attributes:**
+  * `Designation`: Job title (Data Scientist, Data Engineer, ML Engineer, etc.)
+  * `Experience`: Seniority level (`EN` Entry, `MI` Mid, `SE` Senior, `EX` Executive)
+  * `Employment_Status`: Full-time, Part-time, Contract, Freelance
+  * `Company_Size`: Small (`S`), Medium (`M`), Large (`L`)
+  * `Remote_Working_Ratio`: 0 (Onsite), 50 (Hybrid), 100 (Remote)
+  * `Company_Location` & `Employee_Location`: ISO country codes
+  * `Working_Year`: Market reporting year (2020 – 2022)
+  * `Salary_In_Rupees`: Target continuous annual compensation
 
-### 3. Target Variable Engineering
-To align with the classification objective, a new target column named `salary_category` was engineered by discretizing the continuous `Salary_In_Rupees` variable using the following logic:
+---
 
-| Category | Salary Range (INR) | Description |
-| :--- | :--- | :--- |
-| **Low** | < ₹5,000,000 | Entry-level or lower compensation tier |
-| **Medium** | ₹5,000,000 - ₹10,000,000 | Mid-level compensation tier |
-| **High** | > ₹10,000,000 | Senior/Executive compensation tier |
+## ⚙️ Machine Learning Pipeline & Improvements
 
-## Workflow
-1.  **Data Loading & Cleaning:** Loaded raw data and performed initial checks to ensure data integrity (handling nulls/duplicates).
-2.  **EDA (Exploratory Data Analysis):** Used Boxplots to visualize salary distributions and identify outliers, confirming the right-skewed nature of salary data.
-3.  **Preprocessing:**
-    * **Feature Engineering:** Created the `salary_category` target variable.
-    * **Encoding:** Converted categorical variables (e.g., Job Title, Location) into numeric format using One-Hot Encoding.
-    * **Scaling:** Applied `StandardScaler` to normalize numeric features (Critical for the KNN algorithm).
-4.  **Modeling:** Trained and compared three distinct algorithms:
-    * **Decision Tree:** A baseline tree-based model.
-    * **Random Forest:** An ensemble method for better stability.
-    * **K-Nearest Neighbors (KNN):** A distance-based classifier (Tuned K=8).
-5.  **Evaluation:** Assessed performance using Accuracy, Confusion Matrices, and Classification Reports (Precision/Recall).
+1. **Log-Transformation Target:**
+   * Solves right-skewed salary distributions by training on $\ln(1 + \text{Salary})$, stabilizing gradients and improving mid-tier classification.
+2. **Smoothed Target Encoding ($m$-estimate):**
+   * Encodes high-cardinality features (`Designation`, `Company_Location`, `Employee_Location`) using empirical Bayesian smoothing ($m=10.0$) to eliminate overfitting on rare categories.
+3. **Engineered Interaction Features:**
+   * `is_same_country`: Cross-border vs domestic employment indicator.
+   * `emp_score` & `size_score`: Ordinal mappings for company size and employment type.
+4. **Quantile Discretization:**
+   * Maps continuous predicted salaries into 3 balanced tiers (*Low, Medium, High*) using empirical terciles ($t_1 = 33\%$, $t_2 = 66\%$).
 
-## Model Performance Results
-Based on Cross-Validation scores and Test Set evaluation:
+---
 
-| Model | Accuracy | Analysis |
-| :--- | :--- | :--- |
-| **Random Forest** | **~66%** | **Best Model.** Demonstrated the most robust and stable performance across all classes. |
-| **Decision Tree** | ~63% | Showed signs of overfitting compared to the ensemble approach. |
-| **KNN (Tuned K=8)** | ~62% | Initially performed poorly (~56%) but improved significantly after hyperparameter tuning. |
+## 📈 Benchmark & Performance Results
 
-**Conclusion:** The **Random Forest** classifier was selected as the final model due to its superior stability and balanced Precision/Recall metrics across the unbalanced classes.
+| Model Architecture | Accuracy | Weighted F1 | $R^2$ Score | Status |
+| :--- | :---: | :---: | :---: | :--- |
+| **KNN Classifier ($K=8$)** | ~62.0% | ~61.5% | — | Baseline |
+| **Decision Tree Classifier** | ~63.0% | ~62.8% | — | Overfitted |
+| **Random Forest Baseline** | ~66.0% | ~66.0% | — | Previous Model |
+| **HistGradientBoosting (Log Target + Smoothed TE)** | **71.58%** | **71.66%** | **0.4042** | 🏆 **Optimized Model** |
+
+---
 
 ## 🚀 How to Run
-1.  Clone this repository:
-    ```bash
-    git clone https://github.com/waltercoy/salary-categorization.git
-    ```
-2.  Install the required dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  Run the Jupyter Notebook:
-    ```bash
-    jupyter notebook "salary_prediction.ipynb"
-    ```
+
+### 1. Installation
+```bash
+# Clone repository
+git clone https://github.com/waltercoy/salary-categorization.git
+cd salary-categorization
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### 2. Retrain the Model
+You can retrain via one-click CLI or the notebook:
+```bash
+# Option A: Command-line automated training
+python train.py
+
+# Option B: Jupyter Notebook
+jupyter notebook "salary_prediction.ipynb"
+```
+
+### 3. Launch Interactive Web App
+```bash
+streamlit run app.py
+```
+
+### 🌟 Web App Features:
+* **🔮 Tab 1 - Salary Predictor:** Multi-currency support (**USD $, MYR RM, IDR Rp, EUR €, INR ₹**), payment period toggle (Monthly / Yearly), interactive form, and salary position gauges.
+* **📈 Tab 2 - Market Insights:** Exploratory charts of average compensation by seniority, company scale, and top-paying roles.
+* **💡 Tab 3 - Career Growth Simulator:** Interactive "What-If" simulator comparing current vs target seniority levels.
+
+---
 
 ## 👤 Author
 **ARIA FIRMANSYAH**
-* *Connect with me on [LinkedIn] https://www.linkedin.com/in/aria-firmansyah-0b1a87286/*
-* *Dataset Source: [Kaggle - Data Science Fields Salary Categorization] https://www.kaggle.com/datasets/whenamancodes/data-science-fields-salary-categorization*
+* LinkedIn: [Aria Firmansyah](https://www.linkedin.com/in/aria-firmansyah-0b1a87286/)
+* Dataset: [Kaggle](https://www.kaggle.com/datasets/whenamancodes/data-science-fields-salary-categorization)
